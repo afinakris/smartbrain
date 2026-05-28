@@ -9,7 +9,7 @@ const register = require ('./controllers/Register');
 const signin = require('./controllers/Signin');
 const profile = require('./controllers/Profile');
 const image = require('./controllers/Image');
-const handleApiCall = require('./controllers/image');
+const handleApiCall = require('./controllers/Image');
 
 const db = knex({
     client: 'pg',
