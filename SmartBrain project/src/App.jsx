@@ -9,6 +9,8 @@ import ImageLinkForm from './components/ImageLinkForm/ImageLinkForm.jsx';
 import Rank from './components/Rank/Rank.jsx';
 import './App.css';
 
+const API_URL = import.meta.env.VITE_API_URL;
+
 const initialState = {
   input: '',
   imageUrl: '',
@@ -162,7 +164,7 @@ class App extends Component {
     });
 
     try {
-      const response = await fetch('https://smart-brain-server-jes8.onrender.com', {
+      const response = await fetch(`${API_URL}/imageurl`, {//face detection API endpoint
         method: 'POST',
         headers: {'Content-Type': 'application/json'},
         body: JSON.stringify({
@@ -177,7 +179,7 @@ class App extends Component {
       }
 
       if(response) {
-        fetch('https://smart-brain-server-jes8.onrender.com', {
+        fetch(`${API_URL}/image`, {//update user entries count API endpoint
           method: 'put',
           headers: {'Content-Type': 'application/json'},
           body: JSON.stringify({

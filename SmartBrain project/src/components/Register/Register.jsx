@@ -1,5 +1,7 @@
 import React from 'react';
 
+const API_URL = import.meta.env.VITE_API_URL;
+
 class Register extends React.Component {
     constructor(props) {
         super(props); 
@@ -24,7 +26,7 @@ class Register extends React.Component {
 
     onSubmitSignIn = (event) => {
         event.preventDefault();
-        fetch('https://smart-brain-server-jes8.onrender.com', {
+        fetch(`${API_URL}/register`, {
             method: 'post',
             headers: {'Content-Type': 'application/json'},
             body: JSON.stringify({

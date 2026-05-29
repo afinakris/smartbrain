@@ -1,5 +1,7 @@
 import React from 'react';
 
+const API_URL = import.meta.env.VITE_API_URL;
+
 //const Signin = ({ onRouteChange }) => {//This is a functional component, but we need to use state to manage the input values, so we'll conver it to a class component.
 class Signin extends React.Component {
     constructor(props) {//The constructor is where we initialize the state of the component. We need to keep track of the email and password input values, so we set them in the state.
@@ -24,7 +26,7 @@ class Signin extends React.Component {
         //console.log(this.state);
         // Here you would typically send a request to your backend to verify the user's credentials.
         event.preventDefault(); // Prevent the default form submission behavior, which would cause a page reload. This allows us to handle the form submission with JavaScript instead.
-        fetch('https://smart-brain-server-jes8.onrender.com', {
+        fetch(`${API_URL}/signin`, {
             method: 'post',
             headers: {'Content-Type': 'application/json'},
             body: JSON.stringify({
