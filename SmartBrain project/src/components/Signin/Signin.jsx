@@ -35,7 +35,13 @@ class Signin extends React.Component {
             })
         })
         //fetch by default makes a GET request, but you would typically want to make a POST request to send the email and password to the server for authentication. You can do this by adding an options object as the second argument to the fetch function
-        .then(response => response.json())
+        .then(response => {
+            if (!response.ok) {
+                throw new Error (`Sign in failed: ${response.status}`);
+            }
+            
+            return response.json();
+        })
         .then(user => {
             console.log('signin response:', user);
 

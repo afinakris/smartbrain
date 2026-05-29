@@ -35,7 +35,13 @@ class Register extends React.Component {
                 name: this.state.name
             })
         })
-        .then(response => response.json())
+        .then(response => {//whatever the server responds with, we convert it to JSON. This is typically the user object that the server sends back after successful registration.
+            if (!response.ok) {
+                throw new Error (`Register failed: ${response.status}`);
+            }
+            
+            return response.json();
+        })
         .then(user => {
             if (user.id) {//if the server responds with a user object that has an id, we consider the registration successful and load the user and route to the home page.
                 this.props.loadUser(user)
