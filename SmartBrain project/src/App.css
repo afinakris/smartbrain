@@ -1,12 +1,15 @@
+/* Centers text for the top-level App component and its child content. */
 .App {
   text-align: center;
 }
 
+/* Shared helper class used by components to center child elements horizontally. */
 .center {
   display: flex;
   justify-content: center;
 }
 
+/* Keeps a particle background fixed behind the app content. */
 .particles {
   position: fixed;
   top: 0;

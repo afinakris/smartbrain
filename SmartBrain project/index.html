@@ -1,13 +1,20 @@
 <!doctype html>
-<html lang="en">
-  <head>
+<!-- This declares that the page uses HTML5. The browser loads this HTML first; Vite then mounts the React app into it. -->
+<html lang="en"> <!-- creates the root HTML element and sets the language to English -->
+  <head> <!-- below is metadata and configuration about the webpage -->
+    <!-- Sets the character encoding so text is interpreted correctly, like English, emojis, world languages, etc. Without it, strange symbols may appear. -->
     <meta charset="UTF-8" />
+    <!-- Displays the icon displayed in the browser tab. -->
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <!-- Makes the layout scale correctly on phones, tablets, and desktops. -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <!-- Browser tab title for the application. -->
     <title>smartbrain-project</title>
   </head>
-  <body>
+  <body> <!-- contains everything visible on the webpage-->
+    <!-- React uses this empty div as the mounting point for the entire frontend because React generates the UI dynamically, and mount itself into it.-->
     <div id="root"></div>
-    <script type="module" src="/src/main.jsx"></script>
+    <!-- Loads src/main.jsx, which renders App.jsx into the root div. -->
+    <script type="module" src="/src/main.jsx"></script> <!-- The type="module" attribute allows the use of ES6 import/export syntax -->
   </body>
 </html>

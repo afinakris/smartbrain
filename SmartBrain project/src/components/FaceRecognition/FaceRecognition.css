@@ -1,8 +1,13 @@
+/* The frontend positions each returned face box on top of the displayed image. */
 .bounding-box {
+  /* Absolute positioning lets App.jsx pass top/right/bottom/left values from the API result. */
   position: absolute;
+  /* The inset shadow creates the visible yellow rectangle without changing element size. */
   box-shadow: 0 0 0 3px #ffd500 inset;
+  /* Flex properties keep the overlay stable if anything is placed inside the box later. */
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
+  /* Shows the user that the detected box is an interactive visual element. */
   cursor: pointer;
 }

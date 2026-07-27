@@ -1,12 +1,18 @@
+/* Styles the URL input and Detect button container shown on the home page. */
 .form {
+    /* Gives the form a stable width so the input and button line up. */
     width: 700px;
+    /* Provides a white base underneath the decorative gradient pattern. */
     background-color:#ffffff;
+    /* Builds the patterned background seen behind the input and Detect button. */
     background-image: linear-gradient(30deg, #c4aed2 12%, transparent 12.5%, transparent 87%, #dabae8 87.5%, #dabae8),
     linear-gradient(150deg, #c4aed2 12%, transparent 12.5%, transparent 87%, #445 87.5%, #445),
     linear-gradient(30deg, #dabae8 12%, transparent 12.5%, transparent 87%, #445 87.5%, #445),
     linear-gradient(150deg, #dabae8 12%, transparent 12.5%, transparent 87%, #445 87.5%, #445),
     linear-gradient(60deg, #99a 25%, transparent 25.5%, transparent 75%, #99a 75%, #99a),
     linear-gradient(60deg, #99a 25%, transparent 25.5%, transparent 75%, #99a 75%, #99a);
+    /* Controls the repeated size of the background pattern. */
     background-size:80px 140px;
+    /* Offsets the layered gradients so the pattern aligns correctly. */
     background-position: 0 0, 0 0, 40px 70px, 40px 70px, 0 0, 40px 70px;
 }
