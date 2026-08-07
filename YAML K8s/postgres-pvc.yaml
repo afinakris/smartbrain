@@ -1,0 +1,14 @@
+# Requests persistent storage so your database survives pod restarts.
+# Without this, restarting the Postgres pod would wipe all data (users,
+# logins, entry counts) since container filesystems are ephemeral by default.
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: postgres-pvc
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      # 1Gi is plenty for a course project's worth of user data
+      storage: 1Gi

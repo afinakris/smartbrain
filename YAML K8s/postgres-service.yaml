@@ -1,0 +1,15 @@
+# ClusterIP (the default type) - only reachable from inside the cluster.
+# Postgres should never be exposed to the public internet directly.
+# The backend connects to it using this Service's name as the hostname:
+# "postgres-service" - Kubernetes' internal DNS resolves this automatically.
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgres-service
+spec:
+  selector:
+    app: postgres
+  ports:
+    - name: postgres
+      port: 5432
+      targetPort: 5432

@@ -30,7 +30,7 @@ const handleApiCall = async (req, res) => {
                 'Content-Type': 'application/json', //sending json data
             },
             body: JSON.stringify({ //turns JS object into JSON string
-                model: 'image/face_detection/clarifai', // This asks Eden AI to use Clarifai's face-detection model.
+                model: 'image/face_detection/google', // This asks Eden AI to use Google's face-detection model.
                 input: {
                 // Eden AI receives the image URL submitted by the frontend user.
                 file: imageUrl,

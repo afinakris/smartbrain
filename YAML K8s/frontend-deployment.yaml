@@ -1,0 +1,19 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: smartbrain-frontend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: smartbrain-frontend
+  template:
+    metadata:
+      labels:
+        app: smartbrain-frontend
+    spec:
+      containers:
+        - name: smartbrain-frontend
+          image: smartbrainacr.azurecr.io/smartbrain-frontend:v4
+          ports:
+            - containerPort: 8080

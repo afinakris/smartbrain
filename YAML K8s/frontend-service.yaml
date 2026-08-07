@@ -1,0 +1,13 @@
+# type: LoadBalancer gives this a public IP too - this is the address you'll actually visit in a browser to use SmartBrain.
+apiVersion: v1
+kind: Service
+metadata:
+  name: smartbrain-frontend-service
+spec:
+  type: LoadBalancer
+  selector:
+    app: smartbrain-frontend
+  ports:
+    - name: http
+      port: 80
+      targetPort: 8080

@@ -267,7 +267,8 @@ class App extends Component { //creates a React component named App that extends
     return ( // The main render function of the App component. It uses conditional rendering to display different components based on the current route (signin, register, or home). It also passes down necessary props to child components, such as event handlers and state values. The ParticlesBg component is used to render a background animation on the page.
       <div className="App">
         <ParticlesBg color="#faf2ff" num={50} type="cobweb" bg={true} />
-        <Navigation isSignedIn={isSignedIn}onRouteChange={this.onRouteChange}/> //The Navigation component is rendered at the top of the page and receives the isSignedIn state and onRouteChange handler as props. This allows the Navigation component to display different navigation options based on whether the user is signed in or not, and to call onRouteChange when the user clicks on a navigation link to change the route in the App state.
+        <Navigation isSignedIn={isSignedIn} onRouteChange={this.onRouteChange}/> 
+        {/*The Navigation component is rendered at the top of the page and receives the isSignedIn state and onRouteChange handler as props. This allows the Navigation component to display different navigation options based on whether the user is signed in or not, and to call onRouteChange when the user clicks on a navigation link to change the route in the App state. */}
         { route === 'home' //The home route is shown after Signin/Register loads a user and changes the route.
           ? <div>
             <Logo />

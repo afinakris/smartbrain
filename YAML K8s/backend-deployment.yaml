@@ -1,0 +1,62 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: smartbrain-backend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: smartbrain-backend
+  template:
+    metadata:
+      labels:
+        app: smartbrain-backend
+    spec:
+      containers:
+        - name: smartbrain-backend
+          image: smartbrainacr.azurecr.io/smartbrain-backend:v4
+          ports:
+            - containerPort: 3000
+          env:
+            # Non-sensitive values from the ConfigMap
+            - name: PORT
+              valueFrom:
+                configMapKeyRef:
+                  name: backend-config
+                  key: PORT
+            - name: DB_HOST
+              valueFrom:
+                configMapKeyRef:
+                  name: backend-config
+                  key: DB_HOST
+            - name: DB_PORT
+              valueFrom:
+                configMapKeyRef:
+                  name: backend-config
+                  key: DB_PORT
+            - name: DB_SSL
+              valueFrom:
+                configMapKeyRef:
+                  name: backend-config
+                  key: DB_SSL
+            # Sensitive values from the Secrets
+            - name: DB_USER
+              valueFrom:
+                secretKeyRef:
+                  name: db-credentials
+                  key: DB_USER
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: db-credentials
+                  key: DB_PASSWORD
+            - name: DB_NAME
+              valueFrom:
+                secretKeyRef:
+                  name: db-credentials
+                  key: DB_NAME
+            - name: EDEN_AI_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: eden-ai-credentials
+                  key: EDEN_AI_API_KEY

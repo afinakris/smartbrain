@@ -1,0 +1,13 @@
+# Non-sensitive configuration values for the backend.
+# These don't need to be secrets - there's no security risk in someone
+# knowing the port number or that we're talking to "postgres-service".
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: backend-config
+data:
+  PORT: "3000"
+  # DB_HOST: "postgres-service"  # matches the Postgres Service name above
+  DB_HOST: "smartbrain-postgres-server.postgres.database.azure.com"
+  DB_PORT: "5432"
+  DB_SSL: "true" # new line - turns on the SSL switch  just added in server.js

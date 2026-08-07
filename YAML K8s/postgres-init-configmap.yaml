@@ -1,0 +1,32 @@
+# Embeds the contents of init.sql so it can be mounted into the Postgres
+# container at /docker-entrypoint-initdb.d/ - the official postgres image
+# automatically runs any .sql file placed there, but ONLY the first time
+# the container starts with an empty data directory.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: postgres-init-script
+data:
+  init.sql: |
+    -- SmartBrain database schema
+    -- Reconstructed from the columns actually used in:
+    --   controllers/Register.js  (inserts into login + users)
+    --   controllers/Signin.js    (reads email, hash from login)
+    --   controllers/Profile.js   (reads by users.id)
+    --   controllers/Image.js     (increments users.entries by id)
+
+    -- Stores secure login credentials, separate from public profile data.
+    CREATE TABLE IF NOT EXISTS login (
+        id SERIAL PRIMARY KEY,
+        email TEXT UNIQUE NOT NULL,
+        hash TEXT NOT NULL
+    );
+
+    -- Stores public user profile data, linked by email to the login table.
+    CREATE TABLE IF NOT EXISTS users (
+        id SERIAL PRIMARY KEY,
+        email TEXT UNIQUE NOT NULL,
+        name TEXT NOT NULL,
+        entries INTEGER DEFAULT 0,
+        joined TIMESTAMP NOT NULL DEFAULT NOW()
+    );

@@ -1,0 +1,4 @@
+# Kubernetes secrets - contain real database password and Eden AI API key.
+# These must never be committed to a public (or even private) repo.
+YAML K8s/db-secret.yaml
+YAML K8s/eden-ai-secret.yaml

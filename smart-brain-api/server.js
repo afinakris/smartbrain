@@ -21,15 +21,16 @@ const image = require('./controllers/Image');
 // This imports the same image controller module; the route below uses image.handleApiCall directly.
 const handleApiCall = require('./controllers/Image');
 
-// Creates a PostgreSQL database connection using values from API.env.
+// Creates a database connection using values from API.env.
 const db = knex({
-    client: 'pg', //use postgresql
+    client: 'pg',
     connection: {
         host: process.env.DB_HOST,
         port: process.env.DB_PORT,
         user: process.env.DB_USER,
         password: process.env.DB_PASSWORD,
         database: process.env.DB_NAME,
+        ssl: process.env.DB_SSL === 'true' ? { rejectUnauthorized: false } : false, //Check if there's a setting called DB_SSL. If it says true, turn encryption on. If it's missing or says anything else, leave encryption off.
     },
 });
 

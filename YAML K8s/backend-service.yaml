@@ -1,0 +1,17 @@
+# type: LoadBalancer asks Azure to provision a real public IP address for
+# this Service. This is the IP you'll use as VITE_API_URL when building
+# the frontend image - run `kubectl get service smartbrain-backend-service`
+# after applying this and wait for EXTERNAL-IP to show an actual address
+# (it starts as <pending> for a minute or two).
+apiVersion: v1
+kind: Service
+metadata:
+  name: smartbrain-backend-service
+spec:
+  type: LoadBalancer
+  selector:
+    app: smartbrain-backend
+  ports:
+    - name: http
+      port: 80
+      targetPort: 3000
