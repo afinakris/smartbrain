@@ -1,0 +1,139 @@
+name: Frontend Security Scan Smartbrain
+
+on:
+  workflow_dispatch:
+
+jobs:
+  security-scan:
+   runs-on: ubuntu-latest
+   steps:
+    - name: Checkout code
+      uses: actions/checkout@v7
+
+    # SAST
+      
+    - name: Set up Node
+      uses: actions/setup-node@v7
+      with:
+       node-version: '20'
+       
+    - name: Set up Python
+      uses: actions/setup-python@v7
+      with:
+       python-version: '3.x'
+
+    - name: Install njsscan
+      run: pip install njsscan --break-system-packages
+
+    - name: Run njsscan on frontend
+      run: python3 -m njsscan "SmartBrain project" --json -o frontend_njsscan_report.json
+      continue-on-error: true
+
+    - name: Install ESLint and plugins
+      working-directory: SmartBrain project
+      run: npm install eslint eslint-plugin-security eslint-plugin-react --save-dev --legacy-peer-deps
+
+    - name: Run ESLint on frontend
+      working-directory: SmartBrain project
+      run: npx eslint . --format json -o ../frontend_eslint_report.json
+      continue-on-error: true
+
+    - name: Install OpenGrep
+      run: |
+        curl -Lo opengrep https://github.com/opengrep/opengrep/releases/download/v1.30.0/opengrep_manylinux_x86
+        chmod +x opengrep
+        sudo mv opengrep /usr/local/bin/opengrep
+
+    - name: Run OpenGrep on frontend
+      run: opengrep scan --config auto "SmartBrain project" --json --output frontend_opengrep_report.json
+      continue-on-error: true
+
+    - name: Upload SAST reports
+      uses: actions/upload-artifact@v7
+      with:
+        name: frontend-sast-reports
+        path: |
+          frontend_njsscan_report.json
+          frontend_eslint_report.json
+          frontend_opengrep_report.json
+
+    # SCA
+
+    - name: Install OSV-Scanner
+      run: |
+        curl -Lo osv-scanner https://github.com/google/osv-scanner/releases/download/v2.5.1/osv-scanner_linux_amd64
+        chmod +x osv-scanner
+        sudo mv osv-scanner /usr/local/bin/osv-scanner
+
+    - name: Run OSV-Scanner on frontend (table output)
+      working-directory: SmartBrain project
+      run: osv-scanner --lockfile package-lock.json --format table
+      continue-on-error: true
+
+    - name: Run OSV-Scanner on frontend (markdown report)
+      working-directory: SmartBrain project
+      run: osv-scanner --lockfile package-lock.json --format markdown > ../frontend_osv_findings.md
+      continue-on-error: true
+
+    - name: Run npm audit on frontend
+      working-directory: SmartBrain project
+      run: npm audit --audit-level=high
+      continue-on-error: true
+
+    - name: Upload SCA report
+      uses: actions/upload-artifact@v7
+      with:
+        name: frontend-sca-report
+        path: frontend_osv_findings.md
+
+    # Container Security
+
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v4
+
+    - name: Build frontend image
+      uses: docker/build-push-action@v7
+      with:
+        context: ./SmartBrain project
+        push: false
+        tags: smartbrain-frontend:scan
+        build-args: |
+          VITE_API_URL=http://placeholder:3000
+        load: true
+      
+    - name: Run Hadolint on frontend Dockerfile
+      uses: hadolint/hadolint-action@v3.4.0
+      with:
+        dockerfile: SmartBrain project/Dockerfile
+        format: json
+        output-file: frontend_hadolint_report.json
+      continue-on-error: true
+
+    - name: Run Dockle on frontend image
+      uses: goodwithtech/dockle-action@main
+      with:
+        image: smartbrain-frontend:scan
+        format: json
+        output: frontend_dockle_report.json
+        exit-code: '1'
+        exit-level: warn
+      continue-on-error: true
+
+    - name: Run Trivy on frontend image
+      uses: aquasecurity/trivy-action@v0.36.0
+      with:
+        image-ref: smartbrain-frontend:scan
+        format: json
+        output: frontend_trivy_report.json
+        severity: HIGH,CRITICAL
+      continue-on-error: true
+
+    - name: Upload container security reports
+      uses: actions/upload-artifact@v7
+      with:
+        name: frontend-container-reports
+        path: |
+          frontend_hadolin_report.json
+          frontend_dockle_report.json
+          frontend_trivy_report.json
+        
