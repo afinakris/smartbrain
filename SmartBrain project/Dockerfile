@@ -4,16 +4,20 @@ FROM node:20-alpine AS build
 
 WORKDIR /app
 
+# # Copy dependency manifests first for build caching
+# COPY package.json package-lock.json ./
+# # RUN npm ci
+
 # Copy dependency manifests first for build caching
 COPY package.json package-lock.json ./
-RUN npm ci
+# --legacy-peer-deps: eslint-plugin-react@7.37.5's peer range doesn't yet
+# include eslint@10; this is a devDependency confined to this build stage and never ships in the final image, so overriding the peer check is safe.
+RUN npm ci --legacy-peer-dep
 
 # Copy the rest of the frontend source
 COPY . .
 
-# VITE_API_URL must be available at BUILD time, not runtime -
-# Vite bakes env vars starting with VITE_ directly into the compiled
-# JavaScript bundle. Pass this in via: docker build --build-arg VITE_API_URL=...
+# VITE_API_URL must be available at BUILD time, not runtime - Vite bakes env vars starting with VITE_ directly into the compiled JavaScript bundle. Pass this in via: docker build --build-arg VITE_API_URL=...
 ARG VITE_API_URL
 ENV VITE_API_URL=${VITE_API_URL}
 
@@ -22,23 +26,24 @@ RUN npm run build
 
 
 # ---- Stage 2: Serve ----
-# Use nginx-unprivileged - purpose-built by the nginx team to run correctly
-# as a non-root user out of the box (avoids /run permission issues that
-# plain nginx:alpine has when forced to run non-root).
+# Use nginx-unprivileged - purpose-built by the nginx team to run correctly as a non-root user out of the box (avoids /run permission issues that plain nginx:alpine has when forced to run non-root).
 FROM nginxinc/nginx-unprivileged:alpine
 
 # Copy the built static files from the "build" stage into nginx's web root
 COPY --from=build /app/dist /usr/share/nginx/html
 
-# Explicitly set the pid file to a writable location. Recent nginx-unprivileged
-# alpine builds have a known regression where the default nginx.conf still
-# points pid to /run/nginx.pid, which isn't writable by the non-root user.
-# We replace that existing line rather than adding a new one, to avoid a
-# "duplicate pid directive" error.
+# Explicitly set the pid file to a writable location. Recent nginx-unprivileged alpine builds have a known regression where the default nginx.conf still points pid to /run/nginx.pid, which isn't writable by the non-root user.
+# I replace that existing line rather than adding a new one, to avoid a "duplicate pid directive" error.
 RUN sed -i 's|^pid .*|pid /tmp/nginx.pid;|' /etc/nginx/nginx.conf
 
 # nginx-unprivileged listens on 8080 by default instead of 80
 EXPOSE 8080
 
-# Already runs as the "nginx" non-root user by default - no USER line needed
+# Explicit numeric UID (101 = nginx user in this base image) rather than username, per Hadolint DL3066 - avoids relying on username resolution, which can behave inconsistently across host systems.
+USER 101
+
+# Periodically verify nginx is actually serving content, not just running.
+HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
+    CMD ["wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8080/"]
+
 CMD ["nginx", "-g", "daemon off;"]

@@ -30,7 +30,7 @@ const db = knex({
         user: process.env.DB_USER,
         password: process.env.DB_PASSWORD,
         database: process.env.DB_NAME,
-        ssl: process.env.DB_SSL === 'true' ? { rejectUnauthorized: false } : false, //Check if there's a setting called DB_SSL. If it says true, turn encryption on. If it's missing or says anything else, leave encryption off.
+        ssl: process.env.DB_SSL === 'true' ? { rejectUnauthorized: true } : false, //Check if there's a setting called DB_SSL. If it says true, turn encryption on. If it's missing or says anything else, leave encryption off.
     },
 });
 
@@ -62,7 +62,10 @@ const database = {
 // Parses incoming JSON bodies so req.body is available in controllers.
 app.use(express.json());
 // Enables browser requests from the frontend Vite app.
-app.use(cors())
+app.use(cors({
+    origin: process.env.FRONTEND_URL || 'http://localhost:5173', //in a live deployment, FRONTEND_URL would be set to the actual production frontend domain
+    credentials: true
+}));
 
 // Health-check route used to confirm the backend server is running.
 app.get('/', (req, res) => { res.send('it is working!')})
