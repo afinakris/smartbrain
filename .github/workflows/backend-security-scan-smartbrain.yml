@@ -26,6 +26,7 @@ jobs:
       run: pip install njsscan --break-system-packages
 
     - name: Run njsscan on backend
+      id: njsscan
       run: python3 -m njsscan "smart-brain-api" --json -o backend_njsscan_report.json
       continue-on-error: true
 
@@ -34,6 +35,7 @@ jobs:
       run: npm install eslint eslint-plugin-security @eslint/js globals --save-dev
 
     - name: Run ESLint on backend
+      id: eslint
       working-directory: smart-brain-api
       run: npx eslint . --format json -o ../backend_eslint_report.json
       continue-on-error: true
@@ -45,6 +47,7 @@ jobs:
         sudo mv opengrep /usr/local/bin/opengrep
 
     - name: Run OpenGrep on backend
+      id: opengrep
       run: opengrep scan --config auto "smart-brain-api" --json --output backend_opengrep_report.json
       continue-on-error: true
 
@@ -66,6 +69,7 @@ jobs:
         sudo mv osv-scanner /usr/local/bin/osv-scanner
 
     - name: Run OSV-Scanner on backend (table output)
+      id: osv-table
       working-directory: smart-brain-api
       run: osv-scanner --lockfile package-lock.json --format table
       continue-on-error: true
@@ -76,6 +80,7 @@ jobs:
       continue-on-error: true
 
     - name: Run npm audit on backend
+      id: npm-audit
       working-directory: smart-brain-api
       run: npm audit --audit-level=high
       continue-on-error: true
@@ -100,10 +105,12 @@ jobs:
         load: true
       
     - name: Run Hadolint on backend Dockerfile
+      id: hadolint
       run: docker run --rm -i hadolint/hadolint hadolint --format json - < "smart-brain-api/Dockerfile" > backend_hadolint_report.json
       continue-on-error: true
 
     - name: Run Dockle on backend image
+      id: dockle
       uses: goodwithtech/dockle-action@main
       with:
         image: smartbrain-backend:scan
@@ -114,6 +121,7 @@ jobs:
       continue-on-error: true
 
     - name: Run Trivy on backend image
+      id: trivy
       uses: aquasecurity/trivy-action@v0.36.0
       with:
         image-ref: smartbrain-backend:scan
@@ -130,3 +138,9 @@ jobs:
           backend_hadolint_report.json
           backend_dockle_report.json
           backend_trivy_report.json
+
+    - name: Fail pipeline if any security issues were found
+      if: steps.njsscan.outcome == 'failure' || steps.eslint.outcome == 'failure' || steps.opengrep.outcome == 'failure' || steps.osv-table.outcome == 'failure' || steps.npm-audit.outcome == 'failure' || steps.hadolint.outcome == 'failure' || steps.dockle.outcome == 'failure' || steps.trivy.outcome == 'failure'
+      run: |
+        echo "Security issues were detected in one or more scans. See uploaded artifacts for details."
+        exit 1
