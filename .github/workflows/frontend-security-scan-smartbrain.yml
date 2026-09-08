@@ -22,18 +22,12 @@ jobs:
       with:
        python-version: '3.x'
 
-    - name: Install njsscan
-      run: pip install njsscan --break-system-packages
-
-    - name: Run njsscan on frontend
-      run: python3 -m njsscan "SmartBrain project" --json -o frontend_njsscan_report.json
-      continue-on-error: true
-
     - name: Install ESLint and plugins
       working-directory: SmartBrain project
       run: npm install eslint eslint-plugin-security eslint-plugin-react --save-dev --legacy-peer-deps
 
     - name: Run ESLint on frontend
+      id: eslint
       working-directory: SmartBrain project
       run: npx eslint . --format json -o ../frontend_eslint_report.json
       continue-on-error: true
@@ -45,6 +39,7 @@ jobs:
         sudo mv opengrep /usr/local/bin/opengrep
 
     - name: Run OpenGrep on frontend
+      id: opengrep
       run: opengrep scan --config auto "SmartBrain project" --json --output frontend_opengrep_report.json
       continue-on-error: true
 
@@ -53,7 +48,6 @@ jobs:
       with:
         name: frontend-sast-reports
         path: |
-          frontend_njsscan_report.json
           frontend_eslint_report.json
           frontend_opengrep_report.json
 
@@ -66,6 +60,7 @@ jobs:
         sudo mv osv-scanner /usr/local/bin/osv-scanner
 
     - name: Run OSV-Scanner on frontend (table output)
+      id: osv-table
       working-directory: SmartBrain project
       run: osv-scanner --lockfile package-lock.json --format table
       continue-on-error: true
@@ -76,6 +71,7 @@ jobs:
       continue-on-error: true
 
     - name: Run npm audit on frontend
+      id: npm-audit
       working-directory: SmartBrain project
       run: npm audit --audit-level=high
       continue-on-error: true
@@ -102,10 +98,12 @@ jobs:
         load: true
       
     - name: Run Hadolint on frontend Dockerfile
+      id: hadolint
       run: docker run --rm -i hadolint/hadolint hadolint --format json - < "SmartBrain project/Dockerfile" > frontend_hadolint_report.json
       continue-on-error: true
 
     - name: Run Dockle on frontend image
+      id: dockle
       uses: goodwithtech/dockle-action@main
       with:
         image: smartbrain-frontend:scan
@@ -116,6 +114,7 @@ jobs:
       continue-on-error: true
 
     - name: Run Trivy on frontend image
+      id: trivy
       uses: aquasecurity/trivy-action@v0.36.0
       with:
         image-ref: smartbrain-frontend:scan
@@ -129,7 +128,12 @@ jobs:
       with:
         name: frontend-container-reports
         path: |
-          frontend_hadolin_report.json
+          frontend_hadolint_report.json
           frontend_dockle_report.json
           frontend_trivy_report.json
         
+    - name: Fail pipeline if any security issues were found
+      if: steps.eslint.outcome == 'failure' || steps.opengrep.outcome == 'failure' || steps.osv-table.outcome == 'failure' || steps.npm-audit.outcome == 'failure' || steps.hadolint.outcome == 'failure' || steps.dockle.outcome == 'failure' || steps.trivy.outcome == 'failure'
+      run: |
+        echo "Security issues were detected in one or more scans. See uploaded artifacts for details."
+        exit 1
