@@ -102,7 +102,7 @@ jobs:
         load: true
       
     - name: Run Hadolint on frontend Dockerfile
-      run: docker run --rm -i hadolint/hadolint --format json - < "SmartBrain project/Dockerfile" > frontend_hadolint_report.json
+      run: docker run --rm -i hadolint/hadolint hadolint --format json - < "SmartBrain project/Dockerfile" > frontend_hadolint_report.json
       continue-on-error: true
 
     - name: Run Dockle on frontend image
