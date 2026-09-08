@@ -1,0 +1,132 @@
+name: Backend Security Scan Smartbrain
+
+on:
+  workflow_dispatch:
+
+jobs:
+  security-scan:
+   runs-on: ubuntu-latest
+   steps:
+    - name: Checkout code
+      uses: actions/checkout@v7
+
+    # SAST
+
+    - name: Set up Node
+      uses: actions/setup-node@v7
+      with:
+       node-version: '20'
+       
+    - name: Set up Python
+      uses: actions/setup-python@v7
+      with:
+       python-version: '3.x'
+
+    - name: Install njsscan
+      run: pip install njsscan --break-system-packages
+
+    - name: Run njsscan on backend
+      run: python3 -m njsscan "smart-brain-api" --json -o backend_njsscan_report.json
+      continue-on-error: true
+
+    - name: Install ESLint and plugins
+      working-directory: smart-brain-api
+      run: npm install eslint eslint-plugin-security --save-dev
+
+    - name: Run ESLint on backend
+      working-directory: smart-brain-api
+      run: npx eslint . --format json -o ../backend_eslint_report.json
+      continue-on-error: true
+
+    - name: Install OpenGrep
+      run: |
+        curl -Lo opengrep https://github.com/opengrep/opengrep/releases/download/v1.30.0/opengrep_manylinux_x86
+        chmod +x opengrep
+        sudo mv opengrep /usr/local/bin/opengrep
+
+    - name: Run OpenGrep on backend
+      run: opengrep scan --config auto "smart-brain-api" --json --output backend_opengrep_report.json
+      continue-on-error: true
+
+    - name: Upload SAST reports
+      uses: actions/upload-artifact@v7
+      with:
+        name: backend-sast-reports
+        path: |
+          backend_njsscan_report.json
+          backend_eslint_report.json
+          backend_opengrep_report.json
+
+    # SCA
+
+    - name: Install OSV-Scanner
+      run: |
+        curl -Lo osv-scanner https://github.com/google/osv-scanner/releases/download/v2.5.1/osv-scanner_linux_amd64
+        chmod +x osv-scanner
+        sudo mv osv-scanner /usr/local/bin/osv-scanner
+
+    - name: Run OSV-Scanner on backend (table output)
+      working-directory: smart-brain-api
+      run: osv-scanner --lockfile package-lock.json --format table
+      continue-on-error: true
+
+    - name: Run OSV-Scanner on backend (markdown report)
+      working-directory: smart-brain-api
+      run: osv-scanner --lockfile package-lock.json --format markdown > ../backend_osv_findings.md
+      continue-on-error: true
+
+    - name: Run npm audit on backend
+      working-directory: smart-brain-api
+      run: npm audit --audit-level=high
+      continue-on-error: true
+
+    - name: Upload SCA report
+      uses: actions/upload-artifact@v7
+      with:
+        name: backend-sca-report
+        path: backend_osv_findings.md
+
+    # Container Security
+
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v4
+
+    - name: Build backend image
+      uses: docker/build-push-action@v7
+      with:
+        context: ./smart-brain-api
+        push: false
+        tags: smartbrain-backend:scan
+        load: true
+      
+    - name: Run Hadolint on backend Dockerfile
+      run: docker run --rm -i hadolint/hadolint hadolint --format json - < "smart-brain-api/Dockerfile" > backend_hadolint_report.json
+      continue-on-error: true
+
+    - name: Run Dockle on backend image
+      uses: goodwithtech/dockle-action@main
+      with:
+        image: smartbrain-backend:scan
+        format: json
+        output: backend_dockle_report.json
+        exit-code: '1'
+        exit-level: warn
+      continue-on-error: true
+
+    - name: Run Trivy on backend image
+      uses: aquasecurity/trivy-action@v0.36.0
+      with:
+        image-ref: smartbrain-backend:scan
+        format: json
+        output: backend_trivy_report.json
+        severity: HIGH,CRITICAL
+      continue-on-error: true
+
+    - name: Upload container security reports
+      uses: actions/upload-artifact@v7
+      with:
+        name: backend-container-reports
+        path: |
+          backend_hadolint_report.json
+          backend_dockle_report.json
+          backend_trivy_report.json
